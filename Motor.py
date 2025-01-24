@@ -68,10 +68,19 @@ def destroy():
 
 if __name__=='__main__':
     print ('Program is starting ... \n')
-    arduino = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
+    elegoo = serial.Serial('/dev/ttyACM0', 115200, timeout=1)
     time.sleep(2)
     try:
-        arduino.write(b'MOVE')
+        elegoo.setDTR(False)
+        time.sleep(1)
+        elegoo.flushInput()
+        elegoo.setDTR(True)
+        time.sleep(1)
+        elegoo.write(b'1')
         print("sent message to arduino")
+        time.sleep(10)
+        ack = elegoo.read()
+        print('Elegoo sent back %s' % ack)
+        time.sleep(1)
     except KeyboardInterrupt:  # When 'Ctrl+C' is pressed, the child program destroy() will be  executed.
         destroy()
