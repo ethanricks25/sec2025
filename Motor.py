@@ -1,6 +1,7 @@
 import RPi.GPIO as GPIO
 import time
 import pigpio
+import serial
 class Motor:
     def __init__(self):
         self.pwm1 = 24
@@ -60,18 +61,17 @@ class Motor:
         self.right_Wheel(duty2)
         
 PWM=Motor()
-def loop():
-    PWM.setMotorModel(2000,2000)        #Forward
-    time.sleep(1)
-    PWM.setMotorModel(0,0)          #Stop
-    time.sleep(1)
+
     
 def destroy():
     PWM.setMotorModel(0,0)
 
 if __name__=='__main__':
     print ('Program is starting ... \n')
+    arduino = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
+    time.sleep(2)
     try:
-        loop()
+        arduino.write(b'MOVE')
+        print("sent message to arduino")
     except KeyboardInterrupt:  # When 'Ctrl+C' is pressed, the child program destroy() will be  executed.
         destroy()
