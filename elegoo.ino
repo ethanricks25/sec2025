@@ -10,10 +10,12 @@
 #define BI2 26
 
 void setup() {
-  Serial.println("Message recieved!");
-
   //Initialize Serial Communication for rpi
-  Serial.begin(9600);
+  Serial.begin(115200);
+
+  while (!Serial) {
+
+  }
 
   // put your setup code here, to run once:
   pinMode(PWMA, OUTPUT);
@@ -40,7 +42,7 @@ void loop() {
 
   if (Serial.available() > 0) {
     char command = Serial.read();
-    if (command == 'MOVE') {
+    if (command == '1') {
       digitalWrite(STBY, HIGH);
       
     // Set PWM to 50% duty cycle (128 out of 255)
@@ -49,6 +51,7 @@ void loop() {
 
     // Let the motors run for 5 seconds
     delay(5000);
+    Serial.println("A!");
     }
   }
 
