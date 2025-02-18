@@ -1,9 +1,7 @@
 import RPi.GPIO as GPIO
-import time
 import pigpio
-import serial
-class Motor:
-    def __init__(self):
+class Motors:
+    def __init__(self, elegoo):
         self.pwm1 = 24
         self.pwm2 = 23
         self.pwm3 = 5
@@ -21,6 +19,7 @@ class Motor:
         self.PwmServo.set_PWM_range(self.pwm2, 4095)
         self.PwmServo.set_PWM_range(self.pwm3, 4095)
         self.PwmServo.set_PWM_range(self.pwm4, 4095)
+        self.elegoo = elegoo
     
     def duty_range(self,duty1,duty2):
         if duty1>4095:
@@ -60,27 +59,25 @@ class Motor:
         self.left_Wheel(duty1)
         self.right_Wheel(duty2)
         
-PWM=Motor()
+
+    def stop(self):
+        self.setMotorModel(0,0)
+    
+    def move_forward(self):
+        pass
+    
+    def move_back(self):
+        pass
+
+    def turn_right(self):
+        pass
+
+    def turn_left(self):
+        pass
 
     
-def destroy():
-    PWM.setMotorModel(0,0)
 
-if __name__=='__main__':
-    print ('Program is starting ... \n')
-    elegoo = serial.Serial('/dev/ttyACM0', 115200, timeout=1)
-    time.sleep(2)
-    try:
-        elegoo.setDTR(False)
-        time.sleep(1)
-        elegoo.flushInput()
-        elegoo.setDTR(True)
-        time.sleep(1)
-        elegoo.write(b'1')
-        print("sent message to arduino")
-        time.sleep(10)
-        ack = elegoo.read()
-        print('Elegoo sent back %s' % ack)
-        time.sleep(1)
-    except KeyboardInterrupt:  # When 'Ctrl+C' is pressed, the child program destroy() will be  executed.
-        destroy()
+
+    
+    
+

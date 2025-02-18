@@ -9,6 +9,8 @@
 #define BI1 25
 #define BI2 26
 
+int BASE_MOTOR_SPEED = 64;
+
 void setup() {
   //Initialize Serial Communication for rpi
   Serial.begin(115200);
@@ -39,27 +41,62 @@ void setup() {
 }
 
 void loop() { 
-
-  if (Serial.available() > 0) {
-    char command = Serial.read();
-    if (command == '1') {
-      digitalWrite(STBY, HIGH);
-      
-    // Set PWM to 50% duty cycle (128 out of 255)
-    analogWrite(PWMA, 128); // Half-speed for motor A
-    analogWrite(PWMB, 128); // Half-speed for motor B
-
-    // Let the motors run for 5 seconds
-    delay(5000);
-    Serial.println("A!");
-    }
+  String command = "";
+  command = readSerialMessage();
+  switch (command) {
+      case 'MOVE MOTORS SHORT':
+        moveMotorsForward();
+        delay(2000);
+        stopMotors();
+        break;
+      case 'MOVE MOTORS MEDIUM':
+        moveMotorsForward();
+        delay(4000);
+        stopMotors;
+        break;
+      case 'MOVE MOTORS LONG':
+        moveMotorsForward();
+        delay(6000);
+        stopMotors;
+        break;
+      default:
+        break;
   }
-
-
-  // Stop the motors
-  analogWrite(PWMA, 0);
-  analogWrite(PWMB, 0);
-
-  // Wait for 2 seconds before restarting
-  delay(2000);
+  
 }
+
+String readSerialMessage() {
+  String message = "";
+  if (Serial.available() > 0) {                  // Check if data is available to read
+    message = Serial.readStringUntil('\n');      // Read the incoming message until newline
+  }
+  return message;                                // Return the message
+}
+
+void stopMotors(){
+  // Set PWM to 25% duty cycle (64 out of 255)
+  analogWrite(PWMA, 0); // quarter-speed for motor A
+  analogWrite(PWMB, 0); // quarter-speed for motor B
+  Serial.println("MOTORS STOPPED");
+}
+
+void moveMotorsForward() {
+  // Set PWM to 25% duty cycle (64 out of 255)
+  analogWrite(PWMA, BASE_MOTOR_SPEED); // quarter-speed for motor A
+  analogWrite(PWMB, BASE_MOTOR_SPEED); // quarter-speed for motor B
+  Serial.println("MOTORS MOVED FORWARD");
+}
+
+void moveMotorsBackward() {
+  // Set directions for both wheels to move backward
+digitalWrite(AI1, LOW);   // Reverse for motor A
+digitalWrite(AI2, HIGH);
+digitalWrite(BI1, LOW);   // Reverse for motor B
+digitalWrite(BI2, HIGH);
+
+// Set the speed for both motors
+analogWrite(PWMA, BASE_MOTOR_SPEED);
+analogWrite(PWMB, BASE_MOTOR_SPEED);
+}
+
+
