@@ -1,0 +1,25 @@
+// basic code to move servo to 45 degrees and back to 0, will need to be adjusted to configure additional servo for the set of sweepers
+#include <ESP32Servo.h>
+
+Servo myservo;
+
+int posVal = 0;    
+int servoPin = 15; 
+
+void setup() {
+  myservo.setPeriodHertz(50);           
+  myservo.attach(servoPin, 500, 2500);  // attaches the servo on servoPin to the servo object
+}
+void loop() {
+
+  for (posVal = 0; posVal <= 45; posVal += 1) { // goes from 0 degrees to 45 degrees
+    myservo.write(posVal);       // increment servo position by 1
+    delay(15);                   // waits 15ms for the servo to reach the position
+  }
+  delay(1500);                  //small delay for opening and closing sweepers, can be adjusted as needed
+  for (posVal = 45; posVal >= 0; posVal -= 1) { // goes from 45 degrees to 0 degrees
+    myservo.write(posVal);       // decrement servo position by 1
+    delay(15);                   // waits 15ms for the servo to reach the position
+  }
+  delay(1500);
+}
