@@ -2,6 +2,10 @@ import RPi.GPIO as GPIO
 import time
 import pigpio
 import serial
+
+"""
+64 out 255 is the range on the elegoo, so 1024 is the duty cycle on here to match the speed
+"""
 class Motor:
     def __init__(self):
         self.pwm1 = 24
@@ -59,12 +63,15 @@ class Motor:
         duty1,duty2=self.duty_range(duty1,duty2)
         self.left_Wheel(duty1)
         self.right_Wheel(duty2)
+    
+    def stopMotors(self):
+        self.setMotorModel(0,0)
+    
+    def setMotorsForward(self):
+        self.setMotorModel(1024, 1024)
+        
         
 PWM=Motor()
-
-    
-def destroy():
-    PWM.setMotorModel(0,0)
 
 if __name__=='__main__':
     print ('Program is starting ... \n')
