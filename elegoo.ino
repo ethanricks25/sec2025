@@ -9,11 +9,18 @@
 #define BI1 25
 #define BI2 26
 
+const int buttonPin = 28;
+int buttonState = 0;
+int lastButtonState = 0;
+int pressCount = 0;
+
 int BASE_MOTOR_SPEED = 64;
 
 void setup() {
   //Initialize Serial Communication for rpi
   Serial.begin(115200);
+
+  pinMode(buttonPin, INPUT_PULLUP);
 
   while (!Serial) {
 
@@ -41,6 +48,17 @@ void setup() {
 }
 
 void loop() { 
+  buttonState = digitalRead(buttonPin);
+
+  if (buttonState == LOW && lastButtonState == HIGH) {
+      pressCount++;
+      Serial.print("Button pressed! Count: ");
+      Serial.println(pressCount);
+      delay(200);
+  }
+
+  lastButtonState = buttonState;
+  
   String command = "";
   command = readSerialMessage();
   switch (command) {
