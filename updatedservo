@@ -1,0 +1,121 @@
+import RPi.GPIO as GPIO
+import time
+import pigpio
+import threading
+import os
+
+# Servo Position Constants
+CLOSED_CLAW_POSITION = 30
+OPEN_CLAW_POSITION = 50
+RIGHT_SWPR_STRT = 0
+LEFT_SWPR_STRT = 195
+BIN_GRABBER_UP_POS = 105
+BIN_GRABBER_DOWN_POS = 15
+
+class Servo:
+    def __init__(self):
+        self.channel1 = 7   # Right Sweeper
+        self.channel2 = 8   # Left Sweeper
+        self.channel3 = 25  # Bin Grabber
+        
+        self.PwmServo = pigpio.pi()
+        self.PwmServo.set_mode(self.channel1, pigpio.OUTPUT) 
+        self.PwmServo.set_mode(self.channel2, pigpio.OUTPUT) 
+        self.PwmServo.set_mode(self.channel3, pigpio.OUTPUT) 
+        
+        self.PwmServo.set_PWM_frequency(self.channel1, 50)
+        self.PwmServo.set_PWM_frequency(self.channel2, 50)
+        self.PwmServo.set_PWM_frequency(self.channel3, 50)
+
+        # Reset positions on startup
+        self.reset_positions()
+
+    def reset_positions(self):
+        """Reset all servos to their initial positions."""
+        self.setServoPwm('0', RIGHT_SWPR_STRT)
+        self.setServoPwm('1', LEFT_SWPR_STRT)
+        self.setServoPwm('2', BIN_GRABBER_UP_POS)
+        time.sleep(0.25)
+
+    def angle_range(self, angle):
+        """Ensure the angle is within the valid range (0 to 360)."""
+        return max(0, min(angle, 360))
+
+    def setServoPwm(self, channel, angle):
+        """Convert angle to PWM duty cycle and move the servo."""
+        angle = self.angle_range(angle)
+        duty_cycle = int(500 + (2500 - 500) * (angle / 180))  # Scales 0-180° to 500-2500µs
+
+        if channel == '0':
+            self.PwmServo.set_PWM_dutycycle(self.channel1, duty_cycle)
+        elif channel == '1':
+            self.PwmServo.set_PWM_dutycycle(self.channel2, duty_cycle)
+        elif channel == '2':
+            self.PwmServo.set_PWM_dutycycle(self.channel3, duty_cycle)
+
+    def move_servo(self, channel, start, end, step, delay=0.02):
+        """Move a servo from start to end position in steps."""
+        for i in range(start, end, step):
+            self.setServoPwm(channel, i)
+            time.sleep(delay)
+
+    def openSweepers(self):
+        """Open both sweepers simultaneously using threading."""
+        left_thread = threading.Thread(target=self.move_servo, args=('1', LEFT_SWPR_STRT, LEFT_SWPR_STRT - 120, -1))
+        right_thread = threading.Thread(target=self.move_servo, args=('0', RIGHT_SWPR_STRT, RIGHT_SWPR_STRT + 120, 1))
+
+        left_thread.start()
+        right_thread.start()
+        left_thread.join()
+        right_thread.join()
+
+    def closeSweepers(self):
+        """Close both sweepers simultaneously using threading."""
+        right_thread = threading.Thread(target=self.move_servo, args=('0', RIGHT_SWPR_STRT + 120, RIGHT_SWPR_STRT, -1))
+        left_thread = threading.Thread(target=self.move_servo, args=('1', LEFT_SWPR_STRT - 120, LEFT_SWPR_STRT, 1))
+
+        right_thread.start()
+        left_thread.start()
+        right_thread.join()
+        left_thread.join()
+
+    def lowerBinGrabber(self):
+        """Lower the bin grabber."""
+        self.move_servo('2', BIN_GRABBER_UP_POS, BIN_GRABBER_DOWN_POS, -1, delay=0.01)
+
+    def raiseBinGrabber(self):
+        """Raise the bin grabber to the upright position."""
+        self.move_servo('2', BIN_GRABBER_DOWN_POS, BIN_GRABBER_UP_POS, 1, delay=0.01)
+
+    def openClaw(self):
+        """Open the claw."""
+        self.setServoPwm('0', OPEN_CLAW_POSITION)
+
+    def closeClaw(self):
+        """Close the claw."""
+        self.setServoPwm('0', CLOSED_CLAW_POSITION)
+
+# Main program logic
+if __name__ == '__main__':
+    try:
+        servo = Servo()
+        print("Lowering bin grabber...")
+        servo.lowerBinGrabber()
+        time.sleep(3)
+        
+        print("Raising bin grabber...")
+        servo.raiseBinGrabber()
+
+        print("Opening sweepers...")
+        servo.openSweepers()
+        time.sleep(2)
+        
+        print("Closing sweepers...")
+        servo.closeSweepers()
+
+    except KeyboardInterrupt:
+        print("\nProgram interrupted. Resetting servos...")
+        servo.reset_positions()
+
+    finally:
+        servo.PwmServo.stop()  # Properly stop the PWM to avoid servo jitter
