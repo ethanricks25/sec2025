@@ -1,0 +1,45 @@
+import threading
+
+def openSweepers(self):
+    def move_left():
+        for i in range(LEFT_SWPR_STRT, LEFT_SWPR_STRT - 120, -1):
+            self.setServoPwm('1', i)
+            time.sleep(.02)
+
+    def move_right():
+        for i in range(RIGHT_SWPR_STRT, RIGHT_SWPR_STRT + 120, 1):
+            self.setServoPwm('0', i)
+            time.sleep(.02)
+
+    # Create and start threads
+    left_thread = threading.Thread(target=move_left)
+    right_thread = threading.Thread(target=move_right)
+
+    left_thread.start()
+    right_thread.start()
+
+    # Wait for both threads to complete
+    left_thread.join()
+    right_thread.join()
+
+def closeSweepers(self):
+    def move_right():
+        for i in range(RIGHT_SWPR_STRT + 120, RIGHT_SWPR_STRT, -1):
+            self.setServoPwm('0', i)
+            time.sleep(.02)
+
+    def move_left():
+        for i in range(LEFT_SWPR_STRT - 120, LEFT_SWPR_STRT, 1):
+            self.setServoPwm('1', i)
+            time.sleep(.02)
+
+    # Create and start threads
+    right_thread = threading.Thread(target=move_right)
+    left_thread = threading.Thread(target=move_left)
+
+    right_thread.start()
+    left_thread.start()
+
+    # Wait for both threads to complete
+    right_thread.join()
+    left_thread.join()
