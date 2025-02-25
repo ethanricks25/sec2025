@@ -8,6 +8,7 @@
 #define STBY 24
 #define BI1 25
 #define BI2 26
+#define HEADLIGHTS 27
 
 const int buttonPin = 28;
 int buttonState = 0;
@@ -34,6 +35,7 @@ void setup() {
   pinMode(STBY, OUTPUT);
   pinMode(BI1, OUTPUT);
   pinMode(BI2, OUTPUT);
+  pinMode(HEADLIGHTS, OUTPUT);
 
   // Ensure standby is off
   digitalWrite(STBY, HIGH);
@@ -115,6 +117,14 @@ digitalWrite(BI2, HIGH);
 // Set the speed for both motors
 analogWrite(PWMA, BASE_MOTOR_SPEED);
 analogWrite(PWMB, BASE_MOTOR_SPEED);
+}
+
+void turnHeadlightsOn() {
+  digitalWrite(HEADLIGHTS, HIGH);
+}
+
+void turnHeadlightsOff() {
+  digitalWrite(HEADLIGHTS, LOW);
 }
 
 
