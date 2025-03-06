@@ -2,12 +2,14 @@ import RPi.GPIO as GPIO
 import time
 import pigpio
 import os
+import threading
 
 CLOSED_CLAW_POSITION = 30
 OPEN_CLAW_POSITION = 50
 RIGHT_SWPR_STRT = 0
 LEFT_SWPR_STRT = 195
 BIN_GRABBER_UP_POS = 105
+SWEEPER_DELAY = .01
 """
 20 is the lowest position to go on servos (at least for the claw)
 0 to 200 is the range for the blue servos, the servo connected to channel 0 starts at 0
@@ -69,47 +71,59 @@ class Servo:
             self.PwmServo.set_PWM_dutycycle(self.channel3,80+(400/180)*angle)
             
     def openSweepers(self):
-        for i in range(LEFT_SWPR_STRT, LEFT_SWPR_STRT-120,-1):
+        left_thread = threading.Thread(target=self.openLeftSweeper)
+        right_thread = threading.Thread(target=self.openRightSweeper)
+        left_thread.start()
+        right_thread.start()
+        left_thread.join()
+        right_thread.join()
+        
+    def openLeftSweeper(self):
+        for i in range(LEFT_SWPR_STRT, LEFT_SWPR_STRT-120,-3):
             self.setServoPwm('1',i)
-            time.sleep(.02)
+            time.sleep(SWEEPER_DELAY)
         time.sleep(.25)
-        for i in range(RIGHT_SWPR_STRT, RIGHT_SWPR_STRT+120,1):
+        
+    def openRightSweeper(self):#
+        for i in range(RIGHT_SWPR_STRT, RIGHT_SWPR_STRT+120,3):
             self.setServoPwm('0',i)
-            time.sleep(.02)
-
+            time.sleep(SWEEPER_DELAY)
             
     def closeSweepers(self):
-        for i in range(RIGHT_SWPR_STRT+120, RIGHT_SWPR_STRT, -1):
-            self.setServoPwm('0',i)
-            time.sleep(.02)
-        time.sleep(.25)
-        for i in range(LEFT_SWPR_STRT-120, LEFT_SWPR_STRT, 1):
+        right_thread = threading.Thread(target=self.closeRightSweeper)
+        left_thread = threading.Thread(target=self.closeLeftSweeper)
+        right_thread.start()
+        left_thread.start()
+        right_thread.join()
+        left_thread.join()
+        
+
+    def closeLeftSweeper(self):
+        for i in range(LEFT_SWPR_STRT-120, LEFT_SWPR_STRT, 3):
             self.setServoPwm('1',i)
-            time.sleep(.02)
+            time.sleep(SWEEPER_DELAY)
+        
+    def closeRightSweeper(self):
+        for i in range(RIGHT_SWPR_STRT+120, RIGHT_SWPR_STRT, -3):
+            self.setServoPwm('0',i)
+            time.sleep(SWEEPER_DELAY)
+        time.sleep(.25)
     
     def lowerBinGrabber(self):
-        for i in range(BIN_GRABBER_UP_POS, 15, -3):
+        for i in range(BIN_GRABBER_UP_POS, 15, -1):
             self.setServoPwm('2', i)
             time.sleep(.01)
     
     def raiseBinGrabber(self):
-        for i in range(15, BIN_GRABBER_UP_POS, 3):
+        for i in range(15, BIN_GRABBER_UP_POS, 1):
             self.setServoPwm('2', i)
             time.sleep(.01)
+            
         
             
-    
-
-# Main program logic follows:
+ # Main program logic follows:
 if __name__ == '__main__':
     servo=Servo() 
-    servo.lowerBinGrabber()
-    time.sleep(3)
-    servo.raiseBinGrabber()
-"""
-    def openClaw(self):
-        self.setServoPwm('0', OPEN_CLAW_POSITION)
+    servo.closeSweepers()
+
     
-    def closeClaw(self):
-        self.setServoPwm('2', CLOSED_CLAW_POSITION)
-"""

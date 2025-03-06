@@ -3,6 +3,8 @@ import time
 import pigpio
 import serial
 
+MOTOR_SPEED = 1024
+
 """
 64 out 255 is the range on the elegoo, so 1024 is the duty cycle on here to match the speed
 """
@@ -53,13 +55,14 @@ class Motor:
             self.PwmServo.set_PWM_dutycycle(self.pwm3,0)
             self.PwmServo.set_PWM_dutycycle(self.pwm4,duty)
         elif duty<0:
-            self.PwmServo.set_PWM_dutycycle(self.pwm3,abs(duty))
+            self.PwmServo.set_PWM_dutycycle(self.pwm3, abs(duty))
             self.PwmServo.set_PWM_dutycycle(self.pwm4,0)
         else:
             self.PwmServo.set_PWM_dutycycle(self.pwm3,0)
             self.PwmServo.set_PWM_dutycycle(self.pwm4,0)
 
     def setMotorModel(self,duty1,duty2):
+        duty2 = -1 * duty2
         duty1,duty2=self.duty_range(duty1,duty2)
         self.left_Wheel(duty1)
         self.right_Wheel(duty2)
@@ -67,8 +70,23 @@ class Motor:
     def stopMotors(self):
         self.setMotorModel(0,0)
     
+    def setMotorsBackward(self):
+        self.setMotorModel(2048, 2048)
+        
     def setMotorsForward(self):
-        self.setMotorModel(1024, 1024)
+        self.setMotorModel(-1024, -1024)
+    
+    def turnLeft(self):
+        self.setMotorModel(-2048, 2048)
+        
+    def turnRight(self):
+        self.setMotorModel(2048, -2048)
+        
+    def setMotorsStrafeRight(self):
+        self.setMotorModel(3072, -3072)
+    
+    def setMotorsStrafeLeft(self):
+        self.setMotorModel(-3072, 3072)
         
         
 PWM=Motor()
