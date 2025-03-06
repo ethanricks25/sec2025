@@ -1,6 +1,6 @@
 //PWM pins 13 and 12
-#define PWMA 13
-#define PWMB 12
+#define rearRight 13
+#define frontLeft 12
 
 //define 22-26
 #define AI1 22
@@ -12,8 +12,10 @@
 
 const int buttonPin = 28;
 int buttonState = 0;
-int lastButtonState = 0;
+int lastButtonState = HIGH;
 int pressCount = 0;
+unsigned long lastDebounceTime = 0;
+const int debounceDelay = 50;
 
 int BASE_MOTOR_SPEED = 64;
 
@@ -28,8 +30,8 @@ void setup() {
   }
 
   // put your setup code here, to run once:
-  pinMode(PWMA, OUTPUT);
-  pinMode(PWMB, OUTPUT);
+  pinMode(rearRight, OUTPUT);
+  pinMode(frontLeft, OUTPUT);
   pinMode(AI1, OUTPUT);
   pinMode(AI2, OUTPUT);
   pinMode(STBY, OUTPUT);
@@ -42,81 +44,133 @@ void setup() {
 
 
   //Set initial directions for both wheels
-  digitalWrite(AI1, HIGH);  //Forward for motor A
-  digitalWrite(AI2, LOW);
-  digitalWrite(BI1, HIGH);  //Forward for motor B
-  digitalWrite(BI2, LOW);
+  digitalWrite(AI1, LOW);  //Forward for motor A
+  digitalWrite(AI2, HIGH);
+  digitalWrite(BI1, LOW);  //Forward for motor B
+  digitalWrite(BI2, HIGH);
 
 }
 
 void loop() { 
-  buttonState = digitalRead(buttonPin);
 
-  if (buttonState == LOW && lastButtonState == HIGH) {
-      pressCount++;
-      Serial.print("Button pressed! Count: ");
-      Serial.println(pressCount);
-      delay(200);
-  }
+  checkButton();
 
-  lastButtonState = buttonState;
-  
-  String command = "";
-  command = readSerialMessage();
-  switch (command) {
-      case 'MOVE MOTORS SHORT':
+  if (pressCount > 0){
+    String command = Serial.readStringUntil('\n');
+
+    if (command.equals("MOVE MOTORS SHORT")) {
         moveMotorsForward();
-        delay(2000);
+        delay(2600);
         stopMotors();
-        break;
-      case 'MOVE MOTORS MEDIUM':
+        Serial.println(pressCount);
+        pressCount--;
+    } else if (command == "MOVE MOTORS MEDIUM") {
         moveMotorsForward();
         delay(4000);
-        stopMotors;
-        break;
-      case 'MOVE MOTORS LONG':
+        stopMotors();
+        Serial.println(pressCount);
+        // pressCount--;
+    } else if (command == "MOVE MOTORS LONG") {
         moveMotorsForward();
         delay(6000);
-        stopMotors;
-        break;
-      default:
-        break;
+        stopMotors();
+        Serial.println(pressCount);
+        // pressCount--;
+    } else if (command == "TURN RIGHT") {
+        turnRight();
+        delay(1500);
+        stopMotors();
+        restoreRearRight();
+    } else if (command == "TURN LEFT") {
+        turnLeft();
+        delay(1500);
+        stopMotors();
+        restoreFrontLeft();
+    } else if (command == "MOVE BACKWARD") {
+        moveMotorsBackward();
+        delay(1000);
+        stopMotors();
+        setMotorsForward();
+    }
   }
-  
 }
 
 String readSerialMessage() {
   String message = "";
   if (Serial.available() > 0) {                  // Check if data is available to read
-    message = Serial.readStringUntil('\n');      // Read the incoming message until newline
+    message = Serial.readStringUntil('\n');     // Read the incoming message until newline
+    Serial.println(message);      
   }
   return message;                                // Return the message
 }
 
 void stopMotors(){
-  // Set PWM to 25% duty cycle (64 out of 255)
-  analogWrite(PWMA, 0); // quarter-speed for motor A
-  analogWrite(PWMB, 0); // quarter-speed for motor B
+  analogWrite(rearRight, 0); // stop motor A
+  analogWrite(frontLeft, 0); // stop motor B
   Serial.println("MOTORS STOPPED");
 }
 
 void moveMotorsForward() {
   // Set PWM to 25% duty cycle (64 out of 255)
-  analogWrite(PWMA, BASE_MOTOR_SPEED); // quarter-speed for motor A
-  analogWrite(PWMB, BASE_MOTOR_SPEED); // quarter-speed for motor B
+  analogWrite(rearRight, BASE_MOTOR_SPEED); // quarter-speed for motor A
+  analogWrite(frontLeft, BASE_MOTOR_SPEED); // quarter-speed for motor B
   Serial.println("MOTORS MOVED FORWARD");
+}
+
+void reverseRearRight() {
+  digitalWrite(AI1, HIGH);
+  digitalWrite(AI2, LOW);
+}
+void restoreRearRight() {
+  digitalWrite(AI1, LOW);
+  digitalWrite(AI2, HIGH);
+}
+
+void reverseFrontLeft() {
+  digitalWrite(BI1, HIGH);
+  digitalWrite(BI2, LOW);
+}
+void restoreFrontLeft() {
+  digitalWrite(BI1, LOW);
+  digitalWrite(BI2, HIGH);
+}
+
+void turnLeft() {
+  reverseFrontLeft();
+
+  // Set PWM to 25% duty cycle (64 out of 255)
+  analogWrite(rearRight, (BASE_MOTOR_SPEED *2)); // quarter-speed for motor A
+  analogWrite(frontLeft, (BASE_MOTOR_SPEED *2)); // quarter-speed for motor B
+  Serial.println("TURNED LEFT");
+}
+
+void turnRight() {
+  reverseRearRight();
+
+  // Set PWM to 25% duty cycle (64 out of 255)
+  analogWrite(rearRight, (BASE_MOTOR_SPEED *2)); // quarter-speed for motor A
+  analogWrite(frontLeft, (BASE_MOTOR_SPEED*2)); // quarter-speed for motor B
+  Serial.println("TURNED LEFT");
+}
+
+void reverseMotors(){
+  reverseRearRight();
+  reverseFrontLeft();
 }
 
 void moveMotorsBackward() {
   // Set directions for both wheels to move backward
-digitalWrite(AI1, LOW);   // Reverse for motor A
-digitalWrite(AI2, HIGH);
-digitalWrite(BI1, LOW);   // Reverse for motor B
-digitalWrite(BI2, HIGH);
+  reverseMotors();
+  // Set the speed for both motors
+  analogWrite(rearRight, (BASE_MOTOR_SPEED*2));
+  analogWrite(frontLeft, (BASE_MOTOR_SPEED*2));
+}
 
-// Set the speed for both motors
-analogWrite(PWMA, BASE_MOTOR_SPEED);
-analogWrite(PWMB, BASE_MOTOR_SPEED);
+void setMotorsForward() {
+  digitalWrite(AI1, LOW);
+  digitalWrite(AI2, HIGH);
+  digitalWrite(BI1, LOW);
+  digitalWrite(BI2, HIGH);
 }
 
 void turnHeadlightsOn() {
@@ -128,3 +182,15 @@ void turnHeadlightsOff() {
 }
 
 
+void checkButton(){
+
+  buttonState = digitalRead(buttonPin);
+
+  if (buttonState == LOW && lastButtonState == HIGH) {
+    pressCount+=500;
+    delay(500);
+    Serial.println("1");
+  }
+
+lastButtonState = buttonState;
+}
