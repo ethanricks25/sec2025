@@ -3,7 +3,6 @@ import time
 import pigpio
 import os
 import threading
-
 CLOSED_CLAW_POSITION = 30
 OPEN_CLAW_POSITION = 50
 RIGHT_SWPR_STRT = 0
