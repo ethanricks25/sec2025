@@ -1,6 +1,7 @@
 //PWM pins 13 and 12
 #define rearRight 13
 #define frontLeft 12
+#define PIN_ANALOG_IN A0
 
 //define 22-26
 #define AI1 22
@@ -11,11 +12,17 @@
 #define HEADLIGHTS 27
 
 const int buttonPin = 28;
+const int trigPin = 29;
+const int echoPinNorth = 30;
+const int echoPinEast = 31;
 int buttonState = 0;
 int lastButtonState = HIGH;
 int pressCount = 0;
 unsigned long lastDebounceTime = 0;
 const int debounceDelay = 50;
+bool START = false;
+int TotalPhotoReadings = 0;
+int NumPhotoReadings = 0;
 
 int BASE_MOTOR_SPEED = 64;
 
@@ -52,10 +59,13 @@ void setup() {
 }
 
 void loop() { 
-
+  monitorStartLED();
+  if(START){
+    Serial.println("TIME TO START");
+  }
+  /*
   checkButton();
 
-<<<<<<< HEAD:elegoo.ino
   if (pressCount > 0){
     String command = Serial.readStringUntil('\n');
 
@@ -94,27 +104,7 @@ void loop() {
         setMotorsForward();
     }
   }
-=======
-  lastButtonState = buttonState;
-  
-  String command = "";
-  command = readSerialMessage();
-  if (command == "MOVE MOTORS SHORT") {
-    moveMotorsForward();
-    delay(2000);
-    stopMotors();
-  } else if (command == "MOVE MOTORS MEDIUM") {
-    moveMotorsForward();
-    delay(4000);
-    stopMotors();
-  } else if (command == "MOVE MOTORS LONG") {
-    moveMotorsForward();
-    delay(6000);
-    stopMotors();
-  }
-
-  
->>>>>>> 73a9578 (moved elegoo.ino into elegoo directory):elegoo/elegoo.ino
+  */
 }
 
 String readSerialMessage() {
@@ -202,7 +192,16 @@ void turnHeadlightsOn() {
 void turnHeadlightsOff() {
   digitalWrite(HEADLIGHTS, LOW);
 }
-<<<<<<< HEAD:elegoo.ino
+
+void monitorStartLED() {
+  int adcVal = analogRead(PIN_ANALOG_IN); //read adc
+  TotalPhotoReadings += adcVal;
+  NumPhotoReadings++;
+  if (adcVal - (TotalPhotoReadings / NumPhotoReadings) > 10){
+    START = true;
+  }
+  delay(50);
+}
 
 
 void checkButton(){
@@ -217,5 +216,4 @@ void checkButton(){
 
 lastButtonState = buttonState;
 }
-=======
->>>>>>> 73a9578 (moved elegoo.ino into elegoo directory):elegoo/elegoo.ino
+
