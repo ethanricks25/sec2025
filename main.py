@@ -10,6 +10,7 @@ def elegoo_send(elegoo, message) -> None:
     elegoo.write(f'{message}'.encode())
     time.sleep(1)
     
+    
 def clear_serial(elegoo) -> None:
     elegoo.setDTR(False)
     time.sleep(1)
@@ -22,35 +23,42 @@ def moveForward(elegoo) -> None:
     rpi_motors.setMotorsForward()
     time.sleep(2.6)
     rpi_motors.stopMotors()
+    time.sleep(.2)
    
 def moveBackward(elegoo) -> None:
 	elegoo_send(elegoo, 'MOVE BACKWARD')
 	rpi_motors.setMotorsBackward()
-	time.sleep(1)
+	time.sleep(2.6)
 	rpi_motors.stopMotors()
+	time.sleep(.2)
     
-def strafeLeft()-> None:
-	rpi_motors.setMotorsStrafeLeft()
-	time.sleep(2)
+def strafeLeft(elegoo)-> None:
+	elegoo_send(elegoo, 'MOVE BACKWARD')
+	rpi_motors.setMotorsForward()
+	time.sleep(2.6)
 	rpi_motors.stopMotors()
 	
 
-def strafeRight()-> None:
-	rpi_motors.setMotorsStrafeRight()
-	time.sleep(2)
+def strafeRight(elegoo)-> None:
+	elegoo_send(elegoo, 'MOVE MOTORS SHORT')
+	rpi_motors.setMotorsBackward()
+	time.sleep(2.6)
 	rpi_motors.stopMotors()
    
 def turnRight(elegoo) -> None:
 	elegoo_send(elegoo, 'TURN RIGHT')
 	rpi_motors.turnRight()
-	time.sleep(1.5)
+	time.sleep(.925)
 	rpi_motors.stopMotors()
 
 def turnLeft(elegoo) -> None:
 	elegoo_send(elegoo, 'TURN LEFT')
 	rpi_motors.turnLeft()
-	time.sleep(1.5)
+	time.sleep(.925)
 	rpi_motors.stopMotors()
+	
+def read_elegoo(elegoo) -> str:
+	return elegoo.readline().decode('utf-8').rstrip() if elegoo.in_waiting > 0 else ""
 
 
 if __name__=='__main__':
@@ -59,9 +67,14 @@ if __name__=='__main__':
     time.sleep(.1)
     ack = ""
     while True:
-        ack = elegoo.readline().decode('utf-8').rstrip() if elegoo.in_waiting > 0 else ""
+        ack = read_elegoo(elegoo)
         if ack == "1":
-            moveForward(elegoo)
+             moveForward(elegoo)
+             moveForward(elegoo)
+             moveForward(elegoo)
+            
+
+            
 
            
 

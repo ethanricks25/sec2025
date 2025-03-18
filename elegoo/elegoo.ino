@@ -15,6 +15,8 @@ const int buttonPin = 28;
 const int trigPin = 29;
 const int echoPinNorth = 30;
 const int echoPinEast = 31;
+float duration, distance;
+
 int buttonState = 0;
 int lastButtonState = HIGH;
 int pressCount = 0;
@@ -24,14 +26,19 @@ bool START = false;
 int TotalPhotoReadings = 0;
 int NumPhotoReadings = 0;
 
-int BASE_MOTOR_SPEED = 64;
+int BASE_MOTOR_SPEED = 128;
 
 void setup() {
   //Initialize Serial Communication for rpi
   Serial.begin(115200);
 
   pinMode(buttonPin, INPUT_PULLUP);
-
+  
+  //Set pins for ultrasonics
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPinNorth, INPUT);
+  pinMode(echoPinEast, INPUT);
+  
   while (!Serial) {
 
   }
@@ -59,19 +66,16 @@ void setup() {
 }
 
 void loop() { 
-  monitorStartLED();
-  if(START){
-    Serial.println("TIME TO START");
-  }
-  /*
+  // monitorStartLED();
+  // monitorUltrasonics();
   checkButton();
 
-  if (pressCount > 0){
+  if (pressCount > 0 || START){
     String command = Serial.readStringUntil('\n');
 
     if (command.equals("MOVE MOTORS SHORT")) {
         moveMotorsForward();
-        delay(2600);
+        delay(2800);
         stopMotors();
         Serial.println(pressCount);
         pressCount--;
@@ -89,22 +93,21 @@ void loop() {
         // pressCount--;
     } else if (command == "TURN RIGHT") {
         turnRight();
-        delay(1500);
+        delay(.925);
         stopMotors();
         restoreRearRight();
     } else if (command == "TURN LEFT") {
         turnLeft();
-        delay(1500);
+        delay(925);
         stopMotors();
         restoreFrontLeft();
     } else if (command == "MOVE BACKWARD") {
         moveMotorsBackward();
-        delay(1000);
+        delay(2800);
         stopMotors();
         setMotorsForward();
     }
   }
-  */
 }
 
 String readSerialMessage() {
@@ -148,20 +151,20 @@ void restoreFrontLeft() {
 }
 
 void turnLeft() {
-  reverseFrontLeft();
+  reverseRearRight();
 
   // Set PWM to 25% duty cycle (64 out of 255)
-  analogWrite(rearRight, (BASE_MOTOR_SPEED *2)); // quarter-speed for motor A
-  analogWrite(frontLeft, (BASE_MOTOR_SPEED *2)); // quarter-speed for motor B
+  analogWrite(rearRight, (BASE_MOTOR_SPEED)); // quarter-speed for motor A
+  analogWrite(frontLeft, (BASE_MOTOR_SPEED)); // quarter-speed for motor B
   Serial.println("TURNED LEFT");
 }
 
 void turnRight() {
-  reverseRearRight();
+  reverseFrontLeft();
 
   // Set PWM to 25% duty cycle (64 out of 255)
-  analogWrite(rearRight, (BASE_MOTOR_SPEED *2)); // quarter-speed for motor A
-  analogWrite(frontLeft, (BASE_MOTOR_SPEED*2)); // quarter-speed for motor B
+  analogWrite(rearRight, (BASE_MOTOR_SPEED)); // quarter-speed for motor A
+  analogWrite(frontLeft, (BASE_MOTOR_SPEED)); // quarter-speed for motor B
   Serial.println("TURNED LEFT");
 }
 
@@ -174,8 +177,8 @@ void moveMotorsBackward() {
   // Set directions for both wheels to move backward
   reverseMotors();
   // Set the speed for both motors
-  analogWrite(rearRight, (BASE_MOTOR_SPEED*2));
-  analogWrite(frontLeft, (BASE_MOTOR_SPEED*2));
+  analogWrite(rearRight, (BASE_MOTOR_SPEED));
+  analogWrite(frontLeft, (BASE_MOTOR_SPEED));
 }
 
 void setMotorsForward() {
@@ -203,6 +206,19 @@ void monitorStartLED() {
   delay(50);
 }
 
+void monitorUltrasonics() {
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+  
+  duration = pulseIn(echoPinNorth, HIGH);
+  distance = (duration*.0343)/2;
+  Serial.print("Distance: ");
+  Serial.println(distance);
+  delay(100);
+}
 
 void checkButton(){
 
@@ -216,4 +232,3 @@ void checkButton(){
 
 lastButtonState = buttonState;
 }
-

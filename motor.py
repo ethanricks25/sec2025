@@ -3,7 +3,8 @@ import time
 import pigpio
 import serial
 
-MOTOR_SPEED = 1024
+FMOTOR_SPEED = -2048
+BMOTOR_SPEED = 2048
 
 """
 64 out 255 is the range on the elegoo, so 1024 is the duty cycle on here to match the speed
@@ -71,22 +72,16 @@ class Motor:
         self.setMotorModel(0,0)
     
     def setMotorsBackward(self):
-        self.setMotorModel(2048, 2048)
+        self.setMotorModel(BMOTOR_SPEED, BMOTOR_SPEED)
         
     def setMotorsForward(self):
-        self.setMotorModel(-1024, -1024)
+        self.setMotorModel(FMOTOR_SPEED, FMOTOR_SPEED)
     
     def turnLeft(self):
-        self.setMotorModel(-2048, 2048)
+        self.setMotorModel(BMOTOR_SPEED, FMOTOR_SPEED)
         
     def turnRight(self):
-        self.setMotorModel(2048, -2048)
-        
-    def setMotorsStrafeRight(self):
-        self.setMotorModel(3072, -3072)
-    
-    def setMotorsStrafeLeft(self):
-        self.setMotorModel(-3072, 3072)
+        self.setMotorModel(FMOTOR_SPEED, BMOTOR_SPEED)
         
         
 PWM=Motor()
