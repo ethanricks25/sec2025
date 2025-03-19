@@ -1,3 +1,10 @@
+#include <Servo.h>
+int servopin1 = 2;    //Define servo interface digital interface 5
+int servopin2 = 3;    //Define servo interface digital interface 6
+int servopin3 = 4;    //Define servo interface digital interface 4
+int servopin4 = 5;    //Define servo interface digital interface 3
+int servopin5 = 6;   //Define servo interface digital interface 6
+
 //PWM pins 13 and 12
 #define rearRight 13
 #define frontLeft 12
@@ -11,6 +18,8 @@
 #define BI2 26
 #define HEADLIGHTS 27
 
+Servo servo1, servo2, servo3, servo4, servo5;  //Define servo objects
+int pos = 0;
 const int buttonPin = 28;
 const int trigPin = 29;
 const int echoPinNorth = 30;
@@ -31,6 +40,19 @@ int BASE_MOTOR_SPEED = 128;
 void setup() {
   //Initialize Serial Communication for rpi
   Serial.begin(115200);
+
+  pinMode(servopin1,OUTPUT);//Set the servo interface as the output interface
+  pinMode(servopin2,OUTPUT);//Set the servo interface as the output interface
+  pinMode(servopin3,OUTPUT);//Set the servo interface as the output interface
+  pinMode(servopin4,OUTPUT);//Set the servo interface as the output interface
+  pinMode(servopin5,OUTPUT);//Set the servo interface as the output interface
+
+  //Attach pins to servos
+  servo1.attach(servopin1);
+  servo2.attach(servopin2);
+  servo3.attach(servopin3);
+  servo4.attach(servopin4);
+  servo5.attach(servopin5);
 
   pinMode(buttonPin, INPUT_PULLUP);
   
@@ -119,6 +141,9 @@ String readSerialMessage() {
   return message;                                // Return the message
 }
 
+/************
+ DC Motors
+*************/
 void stopMotors(){
   analogWrite(rearRight, 0); // stop motor A
   analogWrite(frontLeft, 0); // stop motor B
@@ -188,6 +213,9 @@ void setMotorsForward() {
   digitalWrite(BI2, HIGH);
 }
 
+/************
+ Headlights
+*************/
 void turnHeadlightsOn() {
   digitalWrite(HEADLIGHTS, HIGH);
 }
@@ -196,6 +224,9 @@ void turnHeadlightsOff() {
   digitalWrite(HEADLIGHTS, LOW);
 }
 
+/************
+ Photoresistor
+*************/
 void monitorStartLED() {
   int adcVal = analogRead(PIN_ANALOG_IN); //read adc
   TotalPhotoReadings += adcVal;
@@ -220,6 +251,196 @@ void monitorUltrasonics() {
   delay(100);
 }
 
+/************
+ Servo Arm
+*************/
+void initializeArm() {
+  servo4Forward();
+  delay(100);
+  servo3Upright();
+  delay(100);
+  servo2Upright();
+  delay(100);
+  servo1Center();
+  delay(100);
+}
+
+
+void servo2Retract(){
+  pos = servo2.read();
+  
+  for(pos=servo2.read(); pos>=0; pos--) {
+    servo2.write(pos);
+    delay(15);
+  }
+}
+
+void servo1Center() {
+  pos = servo1.read();
+
+  if (pos < 90) {
+    for (pos = servo1.read(); pos<=90; pos++){
+      servo1.write(pos);
+      delay(30);
+    }
+  } else {
+    for (pos = servo1.read(); pos>=90; pos--){
+      servo1.write(pos);
+      delay(30);
+    }
+  }
+}
+
+void servo1Forward() {
+  pos = servo1.read();
+
+  for (pos = servo1.read(); pos<=180; pos++){
+    servo1.write(pos);
+    delay(15);
+  }
+}
+
+void servo2Upright() {
+  pos = servo2.read();
+
+  if (pos < 90) {
+    for (pos = servo2.read(); pos<=90; pos++){
+      servo2.write(pos);
+      delay(30);
+    }
+  } else {
+    for (pos = servo2.read(); pos>=90; pos--){
+      servo2.write(pos);
+      delay(30);
+    }
+  }
+}
+
+void servo2Extend() {
+  pos = servo2.read();
+
+  for (pos = servo2.read(); pos<=155; pos++){
+    servo2.write(pos);
+    delay(25);
+  }
+}
+
+void servo3Upright() {
+  pos = servo3.read();
+
+  if (pos < 90) {
+    for (pos = servo3.read(); pos<=90; pos++){
+      servo3.write(pos);
+      delay(30);
+    }
+  } else {
+    for (pos = servo3.read(); pos>=90; pos--){
+      servo3.write(pos);
+      delay(30);
+    }
+  }
+}
+
+void servo3Down() {
+  pos = servo3.read();
+
+  for (pos = servo3.read(); pos>=0; pos--){
+    servo3.write(pos);
+    delay(25);
+  }
+}
+
+void servo4Forward() {
+  pos = servo4.read();
+
+  for (pos = servo4.read(); pos<=180; pos++){
+    servo4.write(pos);
+    delay(20);
+  }
+
+
+  // pos = servo4.read();
+
+  // if (pos < 90) {
+  //   for (pos = servo4.read(); pos<=90; pos++){
+  //     servo4.write(pos);
+  //     delay(30);
+  //   }
+  // } else {
+  //   for (pos = servo4.read(); pos>=90; pos--){
+  //     servo4.write(pos);
+  //     delay(30);
+  //   }
+  // }
+}
+
+void servo4Backward() {
+  pos = servo4.read();
+
+  for (pos = servo4.read(); pos>=0; pos--){
+    servo4.write(pos);
+    delay(20);
+  }
+}
+
+void openClaw(){
+  pos=servo5.read()
+
+  for(pos=servo5.read(); pos<=45; pos++){
+    servo5.write(pos);
+    delay(25);
+  }
+
+  Serial.println("Claw is opened");
+}
+
+void closeClaw(){
+  pos=servo5.read()
+
+  for(pos=servo5.read(); pos>=10; pos--){
+    servo5.write(pos);
+    delay(35);
+  }
+}
+
+void fullyExtendArm() {
+  servo2Upright();
+  servo1Forward();
+  servo2Extend();
+}
+
+
+void homeClaw() {
+  servo5.write(10);
+
+  servo1Forward();
+  servo2Retract();
+}
+
+void dropBeacon() {
+  fullyExtendArm();
+  openClaw();
+  
+  delay(1000);
+
+  closeClaw();
+}
+
+void grabMaterial() {
+  fullyExtendArm();
+  openClaw();
+
+  servo3Down();
+  closeClaw();
+
+  servo4Backward();
+  servo3Upright();
+}
+
+
+/************
+ Start button(for testing)
+*************/
 void checkButton(){
 
   buttonState = digitalRead(buttonPin);
