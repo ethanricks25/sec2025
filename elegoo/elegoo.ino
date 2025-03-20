@@ -37,6 +37,7 @@ int NumPhotoReadings = 0;
 
 int BASE_MOTOR_SPEED = 128;
 
+// .925 is the delay for a 90 degree right turn
 void setup() {
   //Initialize Serial Communication for rpi
   Serial.begin(115200);
@@ -48,11 +49,13 @@ void setup() {
   pinMode(servopin5,OUTPUT);//Set the servo interface as the output interface
 
   //Attach pins to servos
+  /*
   servo1.attach(servopin1);
   servo2.attach(servopin2);
   servo3.attach(servopin3);
   servo4.attach(servopin4);
   servo5.attach(servopin5);
+  */
 
   pinMode(buttonPin, INPUT_PULLUP);
   
@@ -93,39 +96,36 @@ void loop() {
   checkButton();
 
   if (pressCount > 0 || START){
-    String command = Serial.readStringUntil('\n');
-
-    if (command.equals("MOVE MOTORS SHORT")) {
+    String message = Serial.readStringUntil('\n');
+    Serial.println(message);
+    String command;
+    String value;
+    int separatorIndex = message.indexOf(':');
+    if (separatorIndex != -1){
+      command = message.substring(0, separatorIndex);
+      value = message.substring(separatorIndex + 1); 
+    }
+    Serial.println(command);
+    Serial.println(value);
+    if (command.equals("MOVE FORWARD")) {
         moveMotorsForward();
-        delay(2800);
+        delay(1000*value.toFloat());
         stopMotors();
         Serial.println(pressCount);
         pressCount--;
-    } else if (command == "MOVE MOTORS MEDIUM") {
-        moveMotorsForward();
-        delay(4000);
-        stopMotors();
-        Serial.println(pressCount);
-        // pressCount--;
-    } else if (command == "MOVE MOTORS LONG") {
-        moveMotorsForward();
-        delay(6000);
-        stopMotors();
-        Serial.println(pressCount);
-        // pressCount--;
     } else if (command == "TURN RIGHT") {
         turnRight();
-        delay(.925);
+        delay(1000*value.toFloat());
         stopMotors();
         restoreRearRight();
     } else if (command == "TURN LEFT") {
         turnLeft();
-        delay(925);
+        delay(1000*value.toFloat());
         stopMotors();
         restoreFrontLeft();
     } else if (command == "MOVE BACKWARD") {
         moveMotorsBackward();
-        delay(2800);
+        delay(1000*value.toFloat());
         stopMotors();
         setMotorsForward();
     }
@@ -384,7 +384,7 @@ void servo4Backward() {
 }
 
 void openClaw(){
-  pos=servo5.read()
+  pos=servo5.read();
 
   for(pos=servo5.read(); pos<=45; pos++){
     servo5.write(pos);
@@ -395,7 +395,7 @@ void openClaw(){
 }
 
 void closeClaw(){
-  pos=servo5.read()
+  pos=servo5.read();
 
   for(pos=servo5.read(); pos>=10; pos--){
     servo5.write(pos);
@@ -446,9 +446,9 @@ void checkButton(){
   buttonState = digitalRead(buttonPin);
 
   if (buttonState == LOW && lastButtonState == HIGH) {
+    Serial.println("1");
     pressCount+=500;
     delay(500);
-    Serial.println("1");
   }
 
 lastButtonState = buttonState;
