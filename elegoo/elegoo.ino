@@ -319,7 +319,7 @@ void servo2Upright() {
 void servo2Extend() {
   pos = servo2.read();
 
-  for (pos = servo2.read(); pos<=155; pos++){
+  for (pos = servo2.read(); pos<=145; pos++){
     servo2.write(pos);
     delay(25);
   }
@@ -344,7 +344,7 @@ void servo3Upright() {
 void servo3Down() {
   pos = servo3.read();
 
-  for (pos = servo3.read(); pos>=0; pos--){
+  for (pos = servo3.read(); pos>=10; pos--){
     servo3.write(pos);
     delay(25);
   }
@@ -386,7 +386,7 @@ void servo4Backward() {
 void openClaw(){
   pos=servo5.read();
 
-  for(pos=servo5.read(); pos<=45; pos++){
+  for(pos=servo5.read(); pos<=55; pos++){
     servo5.write(pos);
     delay(25);
   }
@@ -423,6 +423,9 @@ void dropBeacon() {
   
   delay(1000);
 
+  servo2Upright();
+
+  delay(500);
   closeClaw();
 }
 
